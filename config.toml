@@ -2,19 +2,19 @@
 
 [info]
 # The advertised URL for the Nostr websocket.
-relay_url = "wss://nostr.example.com/"
+relay_url = "wss://nostr.yuhr.org"
 
 # Relay information for clients.  Put your unique server name here.
-name = "nostr-rs-relay"
+name = "nostr.yuhr.org"
 
 # Description
-description = "A newly created nostr-rs-relay.\n\nCustomize this with your own info."
+description = "A Nostr relay server owned by yuhr.org"
 
 # Administrative contact pubkey
-#pubkey = "0c2d168a4ae8ca58c9f1ab237b5df682599c6c7ab74307ea8b05684b60405d41"
+pubkey = "85563bdf8b7ec25abb0393fce1d6860fc2aac1237e00455a45b6e7c8717899c7"
 
 # Administrative contact URI
-#contact = "mailto:contact@example.com"
+contact = "mailto:mail@yuhr.org"
 
 # Favicon location.  Relative to the current directory.  Assumes an
 # ICO format.
@@ -27,12 +27,12 @@ description = "A newly created nostr-rs-relay.\n\nCustomize this with your own i
 [database]
 # Database engine (sqlite/postgres).  Defaults to sqlite.
 # Support for postgres is currently experimental.
-#engine = "sqlite"
+engine = "sqlite"
 
 # Directory for SQLite files.  Defaults to the current directory.  Can
 # also be specified (and overriden) with the "--db dirname" command
 # line option.
-#data_directory = "."
+data_directory = "."
 
 # Use an in-memory database instead of 'nostr.db'.
 # Requires sqlite engine.
@@ -42,11 +42,11 @@ description = "A newly created nostr-rs-relay.\n\nCustomize this with your own i
 # Database connection pool settings for subscribers:
 
 # Minimum number of SQLite reader connections
-#min_conn = 4
+min_conn = 1
 
 # Maximum number of SQLite reader connections.  Recommend setting this
 # to approx the number of cores.
-#max_conn = 8
+max_conn = 1
 
 # Database connection string.  Required for postgres; not used for
 # sqlite.
@@ -92,7 +92,7 @@ reject_future_seconds = 1800
 # Limiting event creation is highly recommended if your relay is
 # public!
 #
-#messages_per_sec = 5
+messages_per_sec = 5
 
 # Limit client subscriptions created, averaged over one minute.  Must
 # be an integer.  If not set (or set to 0), defaults to unlimited.
@@ -142,10 +142,9 @@ reject_future_seconds = 1800
 # Pubkey addresses in this array are whitelisted for event publishing.
 # Only valid events by these authors will be accepted, if the variable
 # is set.
-#pubkey_whitelist = [
-#  "35d26e4690cbe1a898af61cc3515661eb5fa763b57bd0b42e45099c8b32fd50f",
-#  "887645fef0ce0c3c1218d2f5d8e6132a19304cdc57cd20281d082f38cfea0072",
-#]
+pubkey_whitelist = [
+ "85563bdf8b7ec25abb0393fce1d6860fc2aac1237e00455a45b6e7c8717899c7",
+]
 # Enable NIP-42 authentication
 #nip42_auth = false
 # Send DMs events (kind 4) only to their authenticated recipients

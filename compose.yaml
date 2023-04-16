@@ -1,0 +1,51 @@
+services:
+  traefik:
+    container_name: traefik
+    image: traefik:v2.9
+    restart: unless-stopped
+    command:
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.http.address=:80
+      - --entrypoints.http.http.redirections.entrypoint.to=https
+      - --entrypoints.http.http.redirections.entrypoint.scheme=https
+      - --entrypoints.https.address=:443
+      - --entryPoints.https.forwardedHeaders.insecure=true
+      - --entryPoints.https.proxyProtocol.insecure=true
+      - --certificatesresolvers.cloudflare.acme.email=mail@yuhr.org
+      - --certificatesresolvers.cloudflare.acme.storage=/letsencrypt/acme.json
+      - --certificatesresolvers.cloudflare.acme.dnschallenge.provider=cloudflare
+      - --certificatesresolvers.cloudflare.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory
+      - --providers.docker.endpoint=unix:///var/run/docker.sock
+      - --providers.docker.exposedByDefault=false
+    environment:
+      - CLOUDFLARE_EMAIL=${CLOUDFLARE_EMAIL}
+      - CLOUDFLARE_DNS_API_TOKEN=${CLOUDFLARE_DNS_API_TOKEN}
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./letsencrypt:/letsencrypt
+
+  nostr:
+    container_name: nostr
+    image: ghcr.io/yuhr/nostr.yuhr.org:latest
+    build: .
+    restart: unless-stopped
+    volumes:
+      - ./config.toml:/app/config.toml:ro,Z
+      - ./data:/app/db:Z
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.nostr.rule=Host(`nostr.yuhr.org`)
+      - traefik.http.routers.nostr.entrypoints=https
+      - traefik.http.routers.nostr.tls.certresolver=cloudflare
+      - traefik.http.routers.nostr.service=nostr
+      - traefik.http.services.nostr.loadbalancer.server.port=8080
+      - traefik.http.services.nostr.loadbalancer.passHostHeader=true
+      - traefik.http.middlewares.nostr.headers.sslredirect=true
+      - traefik.http.middlewares.nostr.headers.stsincludesubdomains=true
+      - traefik.http.middlewares.nostr.headers.stspreload=true
+      - traefik.http.middlewares.nostr.headers.stsseconds=63072000
+      - traefik.http.routers.nostr.middlewares=nostr
