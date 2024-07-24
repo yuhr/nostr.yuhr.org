@@ -84,7 +84,8 @@ services:
       - traefik.http.routers.ipfs.entrypoints=http,https
       - traefik.http.routers.ipfs.tls.certresolver=cloudflare
       - traefik.http.routers.ipfs.service=ipfs
-      - traefik.http.routers.ipfs.middlewares=ipfs-headers,ipfs-redirectregex,ipfs-replacepathregex
+      - traefik.http.routers.ipfs.middlewares=ipfs-headers
+      # - traefik.http.routers.ipfs.middlewares=ipfs-headers,ipfs-redirectregex,ipfs-replacepathregex
 
       - traefik.http.middlewares.ipfs-headers.headers.sslredirect=true
       - traefik.http.middlewares.ipfs-headers.headers.stsincludesubdomains=true
@@ -92,12 +93,12 @@ services:
       - traefik.http.middlewares.ipfs-headers.headers.stsseconds=63072000
       - traefik.http.middlewares.ipfs-headers.headers.customresponseheaders.Cache-Control=s-maxage=31536000, max-age=31536000, immutable
 
-      - traefik.http.middlewares.ipfs-redirectregex.redirectregex.regex=^https://ipfs.yuhr.org/ipfs/(.+)$$
-      - traefik.http.middlewares.ipfs-redirectregex.redirectregex.replacement=https://ipfs.yuhr.org/$${1}
-      - traefik.http.middlewares.ipfs-redirectregex.redirectregex.permanent=true
+      # - traefik.http.middlewares.ipfs-redirectregex.redirectregex.regex=^https://ipfs.yuhr.org/ipfs/(.+)$$
+      # - traefik.http.middlewares.ipfs-redirectregex.redirectregex.replacement=https://ipfs.yuhr.org/$${1}
+      # - traefik.http.middlewares.ipfs-redirectregex.redirectregex.permanent=true
 
-      - traefik.http.middlewares.ipfs-replacepathregex.replacepathregex.regex=^/(.+)$$
-      - traefik.http.middlewares.ipfs-replacepathregex.replacepathregex.replacement=/ipfs/$${1}
+      # - traefik.http.middlewares.ipfs-replacepathregex.replacepathregex.regex=^/(.+)$$
+      # - traefik.http.middlewares.ipfs-replacepathregex.replacepathregex.replacement=/ipfs/$${1}
 
   cloudflared:
     container_name: cloudflared
