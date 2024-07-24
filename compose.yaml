@@ -61,7 +61,7 @@ services:
 
   ipfs:
     container_name: ipfs
-    image: ipfs/kubo:master-2023-06-06-50daf64
+    image: ipfs/kubo:master-2024-06-21-11bfb3c
     restart: unless-stopped
     volumes:
       - ./ipfs/staging:/export
@@ -101,7 +101,7 @@ services:
 
   cloudflared:
     container_name: cloudflared
-    image: cloudflare/cloudflared:2023.5.1
+    image: cloudflare/cloudflared:2024.6.1
     restart: unless-stopped
     environment:
       TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN:?}
