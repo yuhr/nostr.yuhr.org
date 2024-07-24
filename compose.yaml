@@ -12,14 +12,18 @@ services:
       - --entrypoints.http.http.redirections.entrypoint.to=https
       - --entrypoints.http.http.redirections.entrypoint.scheme=https
       - --entrypoints.https.address=:443
+      - --entrypoints.ipfs.address=:4001
 
       - --certificatesresolvers.cloudflare.acme.email=mail@yuhr.org
       - --certificatesresolvers.cloudflare.acme.storage=/letsencrypt/acme.json
       - --certificatesresolvers.cloudflare.acme.dnschallenge.provider=cloudflare
       - --certificatesresolvers.cloudflare.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory
     environment:
-      - CLOUDFLARE_EMAIL=${CLOUDFLARE_EMAIL}
-      - CLOUDFLARE_DNS_API_TOKEN=${CLOUDFLARE_DNS_API_TOKEN}
+      CLOUDFLARE_EMAIL: ${CLOUDFLARE_EMAIL:?}
+      CLOUDFLARE_DNS_API_TOKEN: ${CLOUDFLARE_DNS_API_TOKEN:?}
+    networks:
+      default:
+        ipv4_address: "172.18.0.3"
     ports:
       - 80:80
       - 443:443
@@ -32,6 +36,9 @@ services:
     image: ghcr.io/yuhr/nostr.yuhr.org:latest
     build: .
     restart: unless-stopped
+    networks:
+      default:
+        ipv4_address: "172.18.0.4"
     volumes:
       - ./config.toml:/app/config.toml:ro,Z
       - ./data:/app/db:Z
@@ -51,3 +58,62 @@ services:
       - traefik.http.middlewares.nostr-headers.headers.stsincludesubdomains=true
       - traefik.http.middlewares.nostr-headers.headers.stspreload=true
       - traefik.http.middlewares.nostr-headers.headers.stsseconds=63072000
+
+  ipfs:
+    container_name: ipfs
+    image: ipfs/kubo:master-2023-06-06-50daf64
+    restart: unless-stopped
+    volumes:
+      - ./ipfs/staging:/export
+      - ./ipfs/data:/data/ipfs
+    ports:
+      - 4001:4001/tcp
+      - 4001:4001/udp
+    environment:
+      IPFS_PROFILE: server
+    networks:
+      default:
+        ipv4_address: "172.18.0.5"
+    labels:
+      - traefik.enable=true
+
+      - traefik.http.services.ipfs.loadbalancer.server.port=8080
+      - traefik.http.services.ipfs.loadbalancer.passHostHeader=true
+
+      - traefik.http.routers.ipfs.rule=Host(`ipfs.yuhr.org`)
+      - traefik.http.routers.ipfs.entrypoints=http,https
+      - traefik.http.routers.ipfs.tls.certresolver=cloudflare
+      - traefik.http.routers.ipfs.service=ipfs
+      - traefik.http.routers.ipfs.middlewares=ipfs-headers,ipfs-redirectregex,ipfs-replacepathregex
+
+      - traefik.http.middlewares.ipfs-headers.headers.sslredirect=true
+      - traefik.http.middlewares.ipfs-headers.headers.stsincludesubdomains=true
+      - traefik.http.middlewares.ipfs-headers.headers.stspreload=true
+      - traefik.http.middlewares.ipfs-headers.headers.stsseconds=63072000
+      - traefik.http.middlewares.ipfs-headers.headers.customresponseheaders.Cache-Control=s-maxage=31536000, max-age=31536000, immutable
+
+      - traefik.http.middlewares.ipfs-redirectregex.redirectregex.regex=^https://ipfs.yuhr.org/ipfs/(.+)$$
+      - traefik.http.middlewares.ipfs-redirectregex.redirectregex.replacement=https://ipfs.yuhr.org/$${1}
+      - traefik.http.middlewares.ipfs-redirectregex.redirectregex.permanent=true
+
+      - traefik.http.middlewares.ipfs-replacepathregex.replacepathregex.regex=^/(.+)$$
+      - traefik.http.middlewares.ipfs-replacepathregex.replacepathregex.replacement=/ipfs/$${1}
+
+  cloudflared:
+    container_name: cloudflared
+    image: cloudflare/cloudflared:2023.5.1
+    restart: unless-stopped
+    environment:
+      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN:?}
+    command: tunnel --no-autoupdate run
+    networks:
+      default:
+        ipv4_address: "172.18.0.2"
+
+networks:
+  default:
+    ipam:
+      driver: default
+      config:
+        - subnet: "172.18.0.0/16"
+          gateway: "172.18.0.1"
